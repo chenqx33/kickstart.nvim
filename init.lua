@@ -718,8 +718,21 @@ require('lazy').setup({
         'stylua', -- Used to format Lua code
       })
       -- require('java').setup()
-      local capabilities = require('cmp_nvim_lsp').default_capabilities()
+      local lombok_path = vim.fn.expand("/Users/bytedance/Library/Java/lombok.jar")
+
       require('lspconfig').jdtls.setup {
+        cmd = {
+          "java",
+          "-javaagent:" .. lombok_path,
+          "-Xms1g",
+          "--add-modules=ALL-SYSTEM",
+          "--add-opens", "java.base/java.util=ALL-UNNAMED",
+          "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+          -- mason 安装的 jdtls 路径
+          "-jar", vim.fn.glob(vim.fn.stdpath("data") .. "/Users/bytedance/.local/share/nvim/mason/packages/jdtls/plugins/org.eclipse.equinox.launcher_1.7.0.v20250331-1702.jar"),
+          "-configuration", vim.fn.stdpath("data") .. "/Users/bytedance/.local/share/nvim/mason/packages/jdtls/config_mac",
+          "-data", vim.fn.expand("~/.cache/jdtls/workspace/") .. vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t"),
+        },
         capabilities = capabilities,
       }
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -728,6 +741,11 @@ require('lazy').setup({
         automatic_installation = false,
         handlers = {
           function(server_name)
+            -- 避免重复 setup jdtls（你已手动配置了）
+          if server_name == "jdtls" then
+            return
+          end
+
             local server = servers[server_name] or {}
             -- This handles overriding only values explicitly passed
             -- by the server configuration above. Useful when disabling
